@@ -1,1 +1,746 @@
-
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>施秀文的中医大师测验</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .quiz-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .question {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        .options {
+            margin-left: 10px;
+        }
+        .option {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: block; /* 确保每个选项在新行上 */
+        }
+        .option:hover {
+            background-color: #e8f4fc;
+        }
+        .option input[type="radio"] {
+            margin-right: 10px;
+        }
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .submit-btn, .restart-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover, .restart-btn:hover {
+            background-color: #2980b9;
+        }
+        .score-display {
+            text-align: center;
+            font-size: 18px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .restart-btn {
+            display: block;
+            margin: 20px auto;
+            background-color: #9b59b6;
+        }
+        .restart-btn:hover {
+            background-color: #8e44ad;
+        }
+    </style>
+</head>
+<body>
+    <h1>施秀文的中医大师测验</h1>
+    
+    <div id="quizContainer">
+        <!-- 题目将在这里动态添加 -->
+    </div>
+    
+    <div class="score-display" id="scoreDisplay">得分: 0/0</div>
+    
+    <button class="restart-btn" onclick="restartQuiz()">↻ 重新考试</button>
+    
+    <script>
+        let score = 0;
+        let totalQuestions = 0;
+        let answeredQuestions = 0;
+        let currentQuestions = [];
+        
+        // 所有题目数据
+const questionsData = [
+{
+    question: "我国最早的炮制专著是：",
+    options: ["A. 《本草纲目》", "B. 《雷公炮炙论》", "C. 《神农本草经》", "D. 《新修本草》"],
+    answer: "B"
+},
+{
+    question: "‘单行’指的是：",
+    options: ["A. 单味药使用", "B. 多味药配伍", "C. 药物炮制方法", "D. 药物煎煮方法"],
+    answer: "A"
+},
+{
+    question: "‘见肝之病，则知肝当传之于脾’出自：",
+    options: ["A. 《黄帝内经》", "B. 《难经》", "C. 《伤寒论》", "D. 《金匮要略》"],
+    answer: "B"
+},
+{
+    question: "奇经八脉的特点是：",
+    options: ["A. 直属脏腑", "B. 有表里配偶关系", "C. 既不直属脏腑也无表里配偶", "D. 只有六条经脉"],
+    answer: "C"
+},
+{
+    question: "望诊的主要内容是观察：",
+    options: ["A. 神、色、形、态", "B. 脉象变化", "C. 舌苔变化", "D. 声音变化"],
+    answer: "A"
+},
+{
+    question: "‘假神’的表现是：",
+    options: ["A. 面色苍白", "B. 突然颧赤如妆", "C. 四肢冰冷", "D. 呼吸微弱"],
+    answer: "B"
+},
+{
+    question: "舌中部主要反映哪个脏腑的病变：",
+    options: ["A. 心", "B. 肝", "C. 脾", "D. 肾"],
+    answer: "C"
+},
+{
+    question: "‘滑苔’的特点是：",
+    options: ["A. 干枯无津", "B. 湿而滑利", "C. 黄厚腻", "D. 白滑"],
+    answer: "B"
+},
+{
+    question: "‘燥苔’的特点是：",
+    options: ["A. 湿润光滑", "B. 干枯无津", "C. 黄厚腻", "D. 白滑"],
+    answer: "B"
+},
+{
+    question: "自汗是指：",
+    options: ["A. 夜间汗出", "B. 日间汗出", "C. 剧烈运动后汗出", "D. 发热时汗出"],
+    answer: "B"
+},
+{
+    question: "胸胀痛走窜、太息易怒多属：",
+    options: ["A. 气滞", "B. 血瘀", "C. 痰湿", "D. 虚寒"],
+    answer: "A"
+},
+{
+    question: "浮脉主病是：",
+    options: ["A. 表证、虚证", "B. 里证、实证", "C. 热证", "D. 寒证"],
+    answer: "A"
+},
+{
+    question: "弦脉的脉象特点是：",
+    options: ["A. 如按琴弦", "B. 如按葱管", "C. 如按鼓皮", "D. 如按流水"],
+    answer: "A"
+},
+{
+    question: "弦脉主病不包括：",
+    options: ["A. 肝胆病", "B. 痰饮", "C. 痛证", "D. 表证"],
+    answer: "D"
+},
+{
+    question: "休克的主要原因是：",
+    options: ["A. 血液含氧不足", "B. 血压过高", "C. 血糖过高", "D. 体温过高"],
+    answer: "A"
+},
+{
+    question: "烧伤急救首先应该：",
+    options: ["A. 涂抹药膏", "B. 用冷水冲洗", "C. 包扎伤口", "D. 服用止痛药"],
+    answer: "B"
+},
+{
+    question: "正确洗手时间至少需要：",
+    options: ["A. 10秒", "B. 20秒", "C. 30秒", "D. 1分钟"],
+    answer: "B"
+},
+{
+    question: "香港中医药管理委员会成立于：",
+    options: ["A. 1997年", "B. 1999年", "C. 2001年", "D. 2003年"],
+    answer: "B"
+},
+{
+    question: "十岁儿童的用药量一般是：",
+    options: ["A. 成人量的1/3", "B. 成人量的1/2", "C. 成人量的2/3", "D. 成人全量"],
+    answer: "D"
+},
+{
+    question: "需要先煎的药物是：",
+    options: ["A. 薄荷", "B. 金石矿物类药物", "C. 砂仁", "D. 大黄"],
+    answer: "B"
+},
+{
+    question: "煎药忌用的器具是：",
+    options: ["A. 陶瓷锅", "B. 砂锅", "C. 铁锅", "D. 玻璃锅"],
+    answer: "C"
+},
+{
+    question: "妊娠禁用药不包括：",
+    options: ["A. 牵牛", "B. 巴豆", "C. 水蛭", "D. 黄芪"],
+    answer: "D"
+},
+{
+    question: "妊娠慎用药是：",
+    options: ["A. 牛膝", "B. 人参", "C. 甘草", "D. 白术"],
+    answer: "A"
+},
+{
+    question: "‘十八反’中，甘草不能与哪味药同用：",
+    options: ["A. 甘遂", "B. 人参", "C. 白芍", "D. 细辛"],
+    answer: "A"
+},
+{
+    question: "‘十九畏’中，硫磺畏：",
+    options: ["A. 朴硝", "B. 砒霜", "C. 五灵脂", "D. 石脂"],
+    answer: "A"
+},
+{
+    question: "药品生产企业必须：",
+    options: ["A. 有足够资历的技术人员", "B. 可以随意生产", "C. 不需要质量控制", "D. 可以委托无资质人员生产"],
+    answer: "A"
+},
+{
+    question: "‘心藏神’的表现不包括：",
+    options: ["A. 其华在面", "B. 开窍于舌", "C. 在志为喜", "D. 在液为涎"],
+    answer: "D"
+},
+{
+    question: "胃脘刺痛、痛有定处多属：",
+    options: ["A. 胃气滞", "B. 胃血瘀", "C. 胃虚寒", "D. 胃热盛"],
+    answer: "B"
+},
+{
+    question: "‘并开药物’是指：",
+    options: ["A. 一名多药", "B. 单味药使用", "C. 药物炮制方法", "D. 药物煎煮方法"],
+    answer: "A"
+},
+{
+    question: "‘二活’是指：",
+    options: ["A. 羌活和独活", "B. 生地和熟地", "C. 赤芍和白芍", "D. 川乌和草乌"],
+    answer: "A"
+},
+{
+    question: "‘焦三仙’不包括：",
+    options: ["A. 焦神曲", "B. 焦山楂", "C. 焦麦芽", "D. 焦白术"],
+    answer: "D"
+},
+{
+    question: "气调养护是通过：",
+    options: ["A. 调节库内气体成分", "B. 增加湿度", "C. 提高温度", "D. 减少通风"],
+    answer: "A"
+},
+{
+    question: "风化是指药材：",
+    options: ["A. 吸收水分", "B. 在空气中失水", "C. 发霉变质", "D. 自动燃烧"],
+    answer: "B"
+},
+{
+    question: "中药材包装记录不包括：",
+    options: ["A. 品名规格", "B. 产地批号", "C. 包装工号", "D. 销售价格"],
+    answer: "D"
+},
+{
+    question: "‘脾为后天之本’是指：",
+    options: ["A. 脾主运化水谷精微", "B. 脾主藏血", "C. 脾主统血", "D. 脾主肌肉"],
+    answer: "A"
+},
+{
+    question: "‘肾为先天之本’包含：",
+    options: ["A. 后天之精", "B. 只有先天之精", "C. 不包含后天之精", "D. 与脾胃无关"],
+    answer: "A"
+},
+{
+    question: "肺在志为：",
+    options: ["A. 怒", "B. 喜", "C. 悲", "D. 恐"],
+    answer: "C"
+},
+{
+    question: "肺在液为：",
+    options: ["A. 泪", "B. 汗", "C. 涎", "D. 涕"],
+    answer: "D"
+},
+{
+    question: "肾在液为：",
+    options: ["A. 泪", "B. 汗", "C. 涎", "D. 唾"],
+    answer: "D"
+},
+{
+    question: "《孟子·告子下》说：",
+    options: ["A. '有诸内，必形诸外'", "B. '见肝之病，知肝传脾'", "C. '能合色脉，可以万全'", "D. '治病必求于本'"],
+    answer: "A"
+},
+{
+    question: "我国第一部药典性著作是：",
+    options: ["A. 《本草纲目》", "B. 《新修本草》", "C. 《神农本草经》", "D. 《本草经集注》"],
+    answer: "B"
+},
+{
+    question: "《本草纲目》的作者是：",
+    options: ["A. 李时珍", "B. 陶弘景", "C. 张仲景", "D. 孙思邈"],
+    answer: "A"
+},
+{
+    question: "我国现存最早的本草专著是：",
+    options: ["A. 《本草纲目》", "B. 《新修本草》", "C. 《神农本草经》", "D. 《本草经集注》"],
+    answer: "C"
+},
+{
+    question: "《本草经集注》的作者是：",
+    options: ["A. 李时珍", "B. 陶弘景", "C. 张仲景", "D. 孙思邈"],
+    answer: "B"
+},
+{
+    question: "生姜的功效不包括：",
+    options: ["A. 解表散寒", "B. 温中止呕", "C. 温肺止咳", "D. 清热解毒"],
+    answer: "D"
+},
+{
+    question: "紫苏叶的功效不包括：",
+    options: ["A. 发汗解表", "B. 理气宽中", "C. 解鱼蟹毒", "D. 清热解毒"],
+    answer: "D"
+},
+{
+    question: "甘味药的作用是：",
+    options: ["A. 能补能和能缓", "B. 能散能行", "C. 能收能涩", "D. 能泄能燥"],
+    answer: "A"
+},
+{
+    question: "淡味药的作用是：",
+    options: ["A. 能渗能利", "B. 能补能和", "C. 能收能涩", "D. 能泄能燥"],
+    answer: "A"
+},
+{
+    question: "酸味药的作用是：",
+    options: ["A. 能收能涩", "B. 能补能和", "C. 能散能行", "D. 能泄能燥"],
+    answer: "A"
+},
+{
+    question: "苦味药的作用不包括：",
+    options: ["A. 能泄", "B. 能燥", "C. 能坚", "D. 能补"],
+    answer: "D"
+},
+{
+    question: "咸味药的作用是：",
+    options: ["A. 能软能下", "B. 能补能和", "C. 能收能涩", "D. 能散能行"],
+    answer: "A"
+},
+{
+    question: "辛味药的作用是：",
+    options: ["A. 能散能行", "B. 能补能和", "C. 能收能涩", "D. 能泄能燥"],
+    answer: "A"
+},
+{
+    question: "药材取样时，100件以下取：",
+    options: ["A. 3件", "B. 5件", "C. 7件", "D. 10件"],
+    answer: "B"
+},
+{
+    question: "100-1000件按多少比例取样：",
+    options: ["A. 1%", "B. 3%", "C. 5%", "D. 10%"],
+    answer: "C"
+},
+{
+    question: "以味酸为佳的药材是：",
+    options: ["A. 乌梅", "B. 玄参", "C. 黄连", "D. 黄芪"],
+    answer: "A"
+},
+{
+    question: "以色黑为佳的药材是：",
+    options: ["A. 乌梅", "B. 玄参", "C. 黄连", "D. 黄芪"],
+    answer: "B"
+},
+{
+    question: "断面以色黄为佳的药材是：",
+    options: ["A. 乌梅", "B. 玄参", "C. 黄连", "D. 黄芪"],
+    answer: "C"
+},
+{
+    question: "断面有'云锦状花纹'的药材是：",
+    options: ["A. 何首乌", "B. 玄参", "C. 黄连", "D. 黄芪"],
+    answer: "A"
+},
+{
+    question: "芦头成为'狮子头'的药材是：",
+    options: ["A. 人参", "B. 党参", "C. 黄芪", "D. 甘草"],
+    answer: "B"
+},
+{
+    question: "具'蚯蚓头'的药材是：",
+    options: ["A. 防风", "B. 黄芪", "C. 党参", "D. 人参"],
+    answer: "A"
+},
+{
+    question: "断面有'菊花心'的药材是：",
+    options: ["A. 黄连", "B. 黄芪", "C. 当归", "D. 熟地"],
+    answer: "B"
+},
+{
+    question: "气清香为佳的药材是：",
+    options: ["A. 檀香", "B. 黄连", "C. 黄芪", "D. 党参"],
+    answer: "A"
+},
+{
+    question: "根茎断面不中空的是：",
+    options: ["A. 白前", "B. 白薇", "C. 黄连", "D. 黄芪"],
+    answer: "B"
+},
+{
+    question: "根茎断面中空的是：",
+    options: ["A. 白前", "B. 白薇", "C. 黄连", "D. 黄芪"],
+    answer: "A"
+},
+{
+    question: "中药通常分为几大类：",
+    options: ["A. 2类", "B. 3类", "C. 4类", "D. 5类"],
+    answer: "B"
+},
+{
+    question: "中药鉴定的主要依据是：",
+    options: ["A. 《本草纲目》", "B. 《国家药典》", "C. 《神农本草经》", "D. 《新修本草》"],
+    answer: "B"
+},
+{
+    question: "中药四大鉴定法不包括：",
+    options: ["A. 来源鉴定", "B. 性状鉴定", "C. 显微鉴定", "D. 基因测序"],
+    answer: "D"
+},
+{
+    question: "‘滋水涵木法’是指：",
+    options: ["A. 滋肾阴以养肝阴", "B. 温肾阳以补脾阳", "C. 补脾气以益肺气", "D. 疏肝健脾"],
+    answer: "A"
+},
+{
+    question: "‘益火补土法’是指：",
+    options: ["A. 滋肾阴以养肝阴", "B. 温肾阳以补脾阳", "C. 补脾气以益肺气", "D. 疏肝健脾"],
+    answer: "B"
+},
+{
+    question: "‘培土生金法’是指：",
+    options: ["A. 滋肾阴以养肝阴", "B. 温肾阳以补脾阳", "C. 补脾气以益肺气", "D. 疏肝健脾"],
+    answer: "C"
+},
+{
+    question: "四川的道地药材是：",
+    options: ["A. 人参", "B. 黄连", "C. 地黄", "D. 白术"],
+    answer: "B"
+},
+{
+    question: "东北三省的道地药材不包括：",
+    options: ["A. 人参", "B. 鹿茸", "C. 细辛", "D. 黄连"],
+    answer: "D"
+},
+{
+    question: "‘四大怀药’不包括：",
+    options: ["A. 地黄", "B. 牛膝", "C. 菊花", "D. 人参"],
+    answer: "D"
+},
+{
+    question: "‘浙八味’不包括：",
+    options: ["A. 白术", "B. 白芍", "C. 浙贝母", "D. 黄连"],
+    answer: "D"
+},
+{
+    question: "‘四大南药’不包括：",
+    options: ["A. 阳春砂", "B. 巴戟天", "C. 槟榔", "D. 黄连"],
+    answer: "D"
+},
+{
+    question: "归经是指：",
+    options: ["A. 药物作用部位", "B. 药物毒性大小", "C. 药物采收时间", "D. 药物炮制方法"],
+    answer: "A"
+},
+{
+    question: "酸味入：",
+    options: ["A. 肝", "B. 心", "C. 脾", "D. 肺"],
+    answer: "A"
+},
+{
+    question: "苦味入：",
+    options: ["A. 肝", "B. 心", "C. 脾", "D. 肺"],
+    answer: "B"
+},
+{
+    question: "辛味入：",
+    options: ["A. 肝", "B. 心", "C. 脾", "D. 肺"],
+    answer: "D"
+},
+{
+    question: "甘味入：",
+    options: ["A. 肝", "B. 心", "C. 脾", "D. 肺"],
+    answer: "C"
+},
+{
+    question: "咸味入：",
+    options: ["A. 肝", "B. 心", "C. 脾", "D. 肾"],
+    answer: "D"
+},
+{
+    question: "毒性是指：",
+    options: ["A. 药物的偏性及对机体的损害性", "B. 药物的治疗作用", "C. 药物的副作用", "D. 药物的归经特性"],
+    answer: "A"
+},
+{
+    question: "副作用是指：",
+    options: ["A. 常规剂量时出现的与疗效无关的不适反应", "B. 药物的毒性反应", "C. 药物的治疗作用", "D. 药物的归经特性"],
+    answer: "A"
+},
+{
+    question: "‘金’的特性是：",
+    options: ["A. 曲直", "B. 炎上", "C. 从革", "D. 润下"],
+    answer: "C"
+},
+{
+    question: "人体是一个：",
+    options: ["A. 有机整体", "B. 机械组合", "C. 独立器官", "D. 简单系统"],
+    answer: "A"
+},
+{
+    question: "下列哪项不属于五行相生关系？",
+    options: ["A. 木生火", "B. 火生土", "C. 土生金", "D. 金生水", "E. 水生木", "F. 木克土"],
+    answer: "F"
+},
+{
+    question: "五味中具有‘能散能行’作用的是：",
+    options: ["A. 酸味", "B. 苦味", "C. 甘味", "D. 辛味", "E. 咸味"],
+    answer: "D"
+},
+{
+    question: "五色中对应肝脏的是：",
+    options: ["A. 青", "B. 赤", "C. 黄", "D. 白", "E. 黑"],
+    answer: "A"
+},
+{
+    question: "五化中‘长’对应的季节是：",
+    options: ["A. 春", "B. 夏", "C. 长夏", "D. 秋", "E. 冬"],
+    answer: "B"
+},
+{
+    question: "五气中‘燥’最容易损伤的脏腑是：",
+    options: ["A. 肝", "B. 心", "C. 脾", "D. 肺", "E. 肾"],
+    answer: "D"
+},
+{
+    question: "五方中‘中’对应的脏腑是：",
+    options: ["A. 肝", "B. 心", "C. 脾", "D. 肺", "E. 肾"],
+    answer: "C"
+},
+{
+    question: "五季中‘长夏’对应的五行是：",
+    options: ["A. 木", "B. 火", "C. 土", "D. 金", "E. 水"],
+    answer: "C"
+},
+{
+    question: "五脏中‘君主之官’是指：",
+    options: ["A. 肝", "B. 心", "C. 脾", "D. 肺", "E. 肾"],
+    answer: "B"
+},
+{
+    question: "五腑中与肺相表里的是：",
+    options: ["A. 胆", "B. 小肠", "C. 胃", "D. 大肠", "E. 膀胱"],
+    answer: "D"
+},
+{
+    question: "五官中‘舌’对应的脏腑是：",
+    options: ["A. 肝", "B. 心", "C. 脾", "D. 肺", "E. 肾"],
+    answer: "B"
+},
+{
+    question: "五主中‘筋’对应的脏腑是：",
+    options: ["A. 肝", "B. 心", "C. 脾", "D. 肺", "E. 肾"],
+    answer: "A"
+},
+{
+    question: "五华中‘爪’对应的脏腑是：",
+    options: ["A. 肝", "B. 心", "C. 脾", "D. 肺", "E. 肾"],
+    answer: "A"
+},
+{
+    question: "五志中‘思’对应的脏腑是：",
+    options: ["A. 肝", "B. 心", "C. 脾", "D. 肺", "E. 肾"],
+    answer: "C"
+},
+{
+    question: "五声中‘呼’对应的脏腑是：",
+    options: ["A. 肝", "B. 心", "C. 脾", "D. 肺", "E. 肾"],
+    answer: "A"
+},
+{
+    question: "五液中‘唾’对应的脏腑是：",
+    options: ["A. 肝", "B. 心", "C. 脾", "D. 肺", "E. 肾"],
+    answer: "E"
+}
+];
+        
+        // 随机排列数组
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // 准备题目数据（随机题目和选项顺序）
+        function prepareQuestions() {
+            const shuffledQuestions = shuffleArray(questionsData);
+            return shuffledQuestions.map(question => {
+                const originalAnswer = question.answer;
+                const optionPairs = question.options.map(opt => ({
+                    letter: opt.charAt(0),
+                    text: opt.substring(3)
+                }));
+                const shuffledOptions = shuffleArray(optionPairs);
+                const newOptions = shuffledOptions.map((opt, index) => {
+                    const newLetter = String.fromCharCode(65 + index);
+                    return `${newLetter}. ${opt.text}`;
+                });
+                const originalOption = optionPairs.find(opt => opt.letter === originalAnswer);
+                const newAnswerIndex = shuffledOptions.findIndex(opt => 
+                    opt.text === originalOption.text
+                );
+                const newAnswer = String.fromCharCode(65 + newAnswerIndex);
+                return {
+                    question: question.question,
+                    options: newOptions,
+                    answer: newAnswer
+                };
+            });
+        }
+        
+        // 初始化测验
+        function initQuiz() {
+            const quizContainer = document.getElementById('quizContainer');
+            quizContainer.innerHTML = '';
+            currentQuestions = prepareQuestions();
+            totalQuestions = currentQuestions.length;
+            
+            currentQuestions.forEach((questionData, index) => {
+                const questionNumber = index + 1;
+                const questionId = 'q' + questionNumber;
+                const feedbackId = 'feedback' + questionNumber;
+                
+                const questionHTML = `
+                    <div id="quiz${questionNumber}" class="quiz-container">
+                        <div class="question">${questionNumber}. ${questionData.question}</div>
+                        <div class="options" id="options${questionNumber}">
+                            ${questionData.options.map(option => `
+                                <label class="option">
+                                    <input type="radio" name="${questionId}" value="${option.charAt(0)}">
+                                    ${option}
+                                </label>
+                            `).join('')}
+                        </div>
+                        <button class="submit-btn" onclick="checkAnswer('${questionId}', '${questionData.answer}', '${feedbackId}', ${questionNumber})">提交答案</button>
+                        <div id="${feedbackId}" class="feedback"></div>
+                    </div>
+                `;
+                
+                quizContainer.insertAdjacentHTML('beforeend', questionHTML);
+            });
+            
+            resetScore();
+        }
+        
+        // 检查答案
+        function checkAnswer(questionName, correctAnswer, feedbackId, questionNumber) {
+            const selectedOption = document.querySelector(`input[name="${questionName}"]:checked`);
+            const feedbackElement = document.getElementById(feedbackId);
+            const questionElement = document.getElementById('quiz' + questionNumber);
+            
+            if (!selectedOption) {
+                feedbackElement.textContent = "请先选择一个答案！";
+                feedbackElement.className = "feedback incorrect";
+                feedbackElement.style.display = "block";
+                return;
+            }
+            
+            const userAnswer = selectedOption.value;
+            if (userAnswer === correctAnswer) {
+                feedbackElement.textContent = "✓ 回答正确！";
+                feedbackElement.className = "feedback correct";
+                score++;
+            } else {
+                feedbackElement.textContent = `✗ 回答错误。正确答案是: ${correctAnswer}`;
+                feedbackElement.className = "feedback incorrect";
+            }
+            
+            feedbackElement.style.display = "block";
+            answeredQuestions++;
+            updateScore();
+            
+            const options = document.querySelectorAll(`#quiz${questionNumber} input[name="${questionName}"]`);
+            options.forEach(option => {
+                option.disabled = true;
+            });
+            questionElement.querySelector('.submit-btn').disabled = true;
+        }
+        
+        // 更新分数显示
+        function updateScore() {
+            document.getElementById("scoreDisplay").textContent = `得分: ${score}/${answeredQuestions}`;
+        }
+        
+        // 重置分数
+        function resetScore() {
+            score = 0;
+            answeredQuestions = 0;
+            updateScore();
+        }
+        
+        // 重新考试
+        function restartQuiz() {
+            if (confirm('确定要重新开始考试吗？当前进度将丢失。')) {
+                initQuiz();
+            }
+        }
+        
+        // 初始化测验
+        initQuiz();
+    </script>
+</body>
+</html>
